@@ -3,9 +3,11 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
-void main() => runApp(MyApp());
+void main() => runApp(const MyApp());
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -13,27 +15,29 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(),
+      home: const MyHomePage(),
       debugShowCheckedModeBanner: false,
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
+  const MyHomePage({super.key});
+
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  MyHomePageState createState() => MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class MyHomePageState extends State<MyHomePage> {
   List<int> _numbers = [];
-  StreamController<List<int>> _streamController = StreamController();
+  final StreamController<List<int>> _streamController = StreamController();
   String _currentSortAlgo = 'bubble';
   double _sampleSize = 320;
   bool isSorted = false;
   bool isSorting = false;
   int speed = 0;
   static int duration = 1500;
-  GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   Duration _getDuration() {
     return Duration(microseconds: duration);
@@ -158,7 +162,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   _quickSort(int leftIndex, int rightIndex) async {
-    Future<int> _partition(int left, int right) async {
+    Future<int> partition(int left, int right) async {
       int p = (left + (right - left) / 2).toInt();
 
       var temp = _numbers[p];
@@ -195,7 +199,7 @@ class _MyHomePageState extends State<MyHomePage> {
     }
 
     if (leftIndex < rightIndex) {
-      int p = await _partition(leftIndex, rightIndex);
+      int p = await partition(leftIndex, rightIndex);
 
       await _quickSort(leftIndex, p - 1);
 
@@ -203,74 +207,76 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  _mergeSort(int leftIndex, int rightIndex) async {
-    Future<void> merge(int leftIndex, int middleIndex, int rightIndex) async {
-      int leftSize = middleIndex - leftIndex + 1;
-      int rightSize = rightIndex - middleIndex;
-
-      List leftList = new List(leftSize);
-      List rightList = new List(rightSize);
-
-      for (int i = 0; i < leftSize; i++) leftList[i] = _numbers[leftIndex + i];
-      for (int j = 0; j < rightSize; j++) rightList[j] = _numbers[middleIndex + j + 1];
-
-      int i = 0, j = 0;
-      int k = leftIndex;
-
-      while (i < leftSize && j < rightSize) {
-        if (leftList[i] <= rightList[j]) {
-          _numbers[k] = leftList[i];
-          i++;
-        } else {
-          _numbers[k] = rightList[j];
-          j++;
-        }
-
-        await Future.delayed(_getDuration(), () {});
-        _streamController.add(_numbers);
-
-        k++;
-      }
-
-      while (i < leftSize) {
-        _numbers[k] = leftList[i];
-        i++;
-        k++;
-
-        await Future.delayed(_getDuration(), () {});
-        _streamController.add(_numbers);
-      }
-
-      while (j < rightSize) {
-        _numbers[k] = rightList[j];
-        j++;
-        k++;
-
-        await Future.delayed(_getDuration(), () {});
-        _streamController.add(_numbers);
-      }
-    }
-
-    if (leftIndex < rightIndex) {
-      int middleIndex = (rightIndex + leftIndex) ~/ 2;
-
-      await _mergeSort(leftIndex, middleIndex);
-      await _mergeSort(middleIndex + 1, rightIndex);
-
-      await Future.delayed(_getDuration(), () {});
-
-      _streamController.add(_numbers);
-
-      await merge(leftIndex, middleIndex, rightIndex);
-    }
-  }
+  // _mergeSort(int leftIndex, int rightIndex) async {
+  //   Future<void> merge(int leftIndex, int middleIndex, int rightIndex) async {
+  //     int leftSize = middleIndex - leftIndex + 1;
+  //     int rightSize = rightIndex - middleIndex;
+  //
+  //     List leftList = List(leftSize);
+  //     List rightList = List(rightSize);
+  //
+  //     for (int i = 0; i < leftSize; i++) leftList[i] = _numbers[leftIndex + i];
+  //     for (int j = 0; j < rightSize; j++) rightList[j] = _numbers[middleIndex + j + 1];
+  //
+  //     int i = 0, j = 0;
+  //     int k = leftIndex;
+  //
+  //     while (i < leftSize && j < rightSize) {
+  //       if (leftList[i] <= rightList[j]) {
+  //         _numbers[k] = leftList[i];
+  //         i++;
+  //       } else {
+  //         _numbers[k] = rightList[j];
+  //         j++;
+  //       }
+  //
+  //       await Future.delayed(_getDuration(), () {});
+  //       _streamController.add(_numbers);
+  //
+  //       k++;
+  //     }
+  //
+  //     while (i < leftSize) {
+  //       _numbers[k] = leftList[i];
+  //       i++;
+  //       k++;
+  //
+  //       await Future.delayed(_getDuration(), () {});
+  //       _streamController.add(_numbers);
+  //     }
+  //
+  //     while (j < rightSize) {
+  //       _numbers[k] = rightList[j];
+  //       j++;
+  //       k++;
+  //
+  //       await Future.delayed(_getDuration(), () {});
+  //       _streamController.add(_numbers);
+  //     }
+  //   }
+  //
+  //   if (leftIndex < rightIndex) {
+  //     int middleIndex = (rightIndex + leftIndex) ~/ 2;
+  //
+  //     await _mergeSort(leftIndex, middleIndex);
+  //     await _mergeSort(middleIndex + 1, rightIndex);
+  //
+  //     await Future.delayed(_getDuration(), () {});
+  //
+  //     _streamController.add(_numbers);
+  //
+  //     await merge(leftIndex, middleIndex, rightIndex);
+  //   }
+  // }
 
   _shellSort() async {
     for (int gap = _numbers.length ~/ 2; gap > 0; gap ~/= 2) {
       for (int i = gap; i < _numbers.length; i += 1) {
         int temp = _numbers[i];
         int j;
-        for (j = i; j >= gap && _numbers[j - gap] > temp; j -= gap) _numbers[j] = _numbers[j - gap];
+        for (j = i; j >= gap && _numbers[j - gap] > temp; j -= gap) {
+          _numbers[j] = _numbers[j - gap];
+        }
         _numbers[j] = temp;
         await Future.delayed(_getDuration());
         _streamController.add(_numbers);
@@ -317,7 +323,7 @@ class _MyHomePageState extends State<MyHomePage> {
       if (_numbers[a] < min) min = _numbers[a];
     }
     range = max - min + 1;
-    List<int> phole = new List.generate(range, (i) => 0);
+    List<int> phole = List.generate(range, (i) => 0);
 
     for (i = 0; i < _numbers.length; i++) {
       phole[_numbers[i] - min]++;
@@ -419,9 +425,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
     while (index < _numbers.length) {
       if (index == 0) index++;
-      if (_numbers[index] >= _numbers[index - 1])
+      if (_numbers[index] >= _numbers[index - 1]) {
         index++;
-      else {
+      } else {
         int temp = _numbers[index];
         _numbers[index] = _numbers[index - 1];
         _numbers[index - 1] = temp;
@@ -503,7 +509,7 @@ class _MyHomePageState extends State<MyHomePage> {
   _checkAndResetIfSorted() async {
     if (isSorted) {
       _reset();
-      await Future.delayed(Duration(milliseconds: 200));
+      await Future.delayed(const Duration(milliseconds: 200));
     }
   }
 
@@ -511,49 +517,36 @@ class _MyHomePageState extends State<MyHomePage> {
     switch (_currentSortAlgo) {
       case "bubble":
         return "Bubble Sort";
-        break;
       case "coctail":
         return "Coctail Sort";
-        break;
       case "pigeonhole":
         return "Pigeonhole Sort";
-        break;
       case "recursivebubble":
         return "Recursive Bubble Sort";
-        break;
       case "heap":
         return "Heap Sort";
-        break;
       case "selection":
         return "Selection Sort";
-        break;
       case "insertion":
         return "Insertion Sort";
-        break;
       case "quick":
         return "Quick Sort";
-        break;
       case "merge":
         return "Merge Sort";
-        break;
       case "shell":
         return "Shell Sort";
-        break;
       case "comb":
         return "Comb Sort";
-        break;
       case "cycle":
         return "Cycle Sort";
-        break;
       case "gnome":
         return "Gnome Sort";
-        break;
       case "stooge":
         return "Stooge Sort";
-        break;
       case "oddeven":
         return "Odd Even Sort";
-        break;
+      default:
+        return "Bubble Sort";
     }
   }
 
@@ -566,7 +559,8 @@ class _MyHomePageState extends State<MyHomePage> {
       duration = duration ~/ 2;
     }
 
-    print(speed.toString() + " " + duration.toString());
+    // ignore: avoid_print
+    print("$speed $duration");
     setState(() {});
   }
 
@@ -577,7 +571,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     await _checkAndResetIfSorted();
 
-    Stopwatch stopwatch = new Stopwatch()..start();
+    Stopwatch stopwatch = Stopwatch()..start();
 
     switch (_currentSortAlgo) {
       case "comb":
@@ -622,15 +616,18 @@ class _MyHomePageState extends State<MyHomePage> {
       case "quick":
         await _quickSort(0, _sampleSize.toInt() - 1);
         break;
-      case "merge":
-        await _mergeSort(0, _sampleSize.toInt() - 1);
-        break;
+      // case "merge":
+      //   await _mergeSort(0, _sampleSize.toInt() - 1);
+      //   break;
     }
 
     stopwatch.stop();
 
-    _scaffoldKey.currentState.removeCurrentSnackBar();
-    _scaffoldKey.currentState.showSnackBar(
+    // _scaffoldKey.currentState.removeCurrentSnackBar();
+    ScaffoldMessenger.of(context).removeCurrentSnackBar();
+
+    // _scaffoldKey.currentState.showSnackBar(
+    ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
           "Sorting completed in ${stopwatch.elapsed.inMilliseconds} ms.",
@@ -655,69 +652,69 @@ class _MyHomePageState extends State<MyHomePage> {
       key: _scaffoldKey,
       appBar: AppBar(
         title: Text(_getTitle()),
-        backgroundColor: Color(0xFF0E4D64),
+        backgroundColor: const Color(0xFF0E4D64),
         actions: <Widget>[
           PopupMenuButton<String>(
             initialValue: _currentSortAlgo,
             itemBuilder: (ctx) {
               return [
-                PopupMenuItem(
+                const PopupMenuItem(
                   value: 'bubble',
                   child: Text("Bubble Sort"),
                 ),
-                PopupMenuItem(
+                const PopupMenuItem(
                   value: 'recursivebubble',
                   child: Text("Recursive Bubble Sort"),
                 ),
-                PopupMenuItem(
+                const PopupMenuItem(
                   value: 'heap',
                   child: Text("Heap Sort"),
                 ),
-                PopupMenuItem(
+                const PopupMenuItem(
                   value: 'selection',
                   child: Text("Selection Sort"),
                 ),
-                PopupMenuItem(
+                const PopupMenuItem(
                   value: 'insertion',
                   child: Text("Insertion Sort"),
                 ),
-                PopupMenuItem(
+                const PopupMenuItem(
                   value: 'quick',
                   child: Text("Quick Sort"),
                 ),
-                PopupMenuItem(
+                const PopupMenuItem(
                   value: 'merge',
                   child: Text("Merge Sort"),
                 ),
-                PopupMenuItem(
+                const PopupMenuItem(
                   value: 'shell',
                   child: Text("Shell Sort"),
                 ),
-                PopupMenuItem(
+                const PopupMenuItem(
                   value: 'comb',
                   child: Text("Comb Sort"),
                 ),
-                PopupMenuItem(
+                const PopupMenuItem(
                   value: 'pigeonhole',
                   child: Text("Pigeonhole Sort"),
                 ),
-                PopupMenuItem(
+                const PopupMenuItem(
                   value: 'cycle',
                   child: Text("Cycle Sort"),
                 ),
-                PopupMenuItem(
+                const PopupMenuItem(
                   value: 'coctail',
                   child: Text("Coctail Sort"),
                 ),
-                PopupMenuItem(
+                const PopupMenuItem(
                   value: 'gnome',
                   child: Text("Gnome Sort"),
                 ),
-                PopupMenuItem(
+                const PopupMenuItem(
                   value: 'stooge',
                   child: Text("Stooge Sort"),
                 ),
-                PopupMenuItem(
+                const PopupMenuItem(
                   value: 'oddeven',
                   child: Text("Odd Even Sort"),
                 ),
@@ -733,20 +730,20 @@ class _MyHomePageState extends State<MyHomePage> {
       body: SafeArea(
         child: Container(
           padding: const EdgeInsets.only(top: 0.0),
-          child: StreamBuilder<Object>(
+          child: StreamBuilder<List<int>>(
               initialData: _numbers,
               stream: _streamController.stream,
               builder: (context, snapshot) {
-                List<int> numbers = snapshot.data;
+                List<int> numbers = snapshot.data!;
                 int counter = 0;
-
                 return Row(
                   children: numbers.map((int num) {
                     counter++;
-                    return Container(
-                      child: CustomPaint(
-                        painter: BarPainter(index: counter, value: num, width: MediaQuery.of(context).size.width / _sampleSize),
-                      ),
+                    return CustomPaint(
+                      painter: BarPainter(
+                          index: counter,
+                          value: num,
+                          width: MediaQuery.of(context).size.width / _sampleSize),
                     );
                   }).toList(),
                 );
@@ -757,21 +754,23 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Row(
           children: <Widget>[
             Expanded(
-                child: FlatButton(
+                child: OutlinedButton(
                     onPressed: isSorting
                         ? null
                         : () {
                             _reset();
                             _setSortAlgo(_currentSortAlgo);
                           },
-                    child: Text("RESET"))),
-            Expanded(child: FlatButton(onPressed: isSorting ? null : _sort, child: Text("SORT"))),
+                    child: const Text("RESET"))),
             Expanded(
-                child: FlatButton(
+                child:
+                    OutlinedButton(onPressed: isSorting ? null : _sort, child: const Text("SORT"))),
+            Expanded(
+                child: OutlinedButton(
                     onPressed: isSorting ? null : _changeSpeed,
                     child: Text(
                       "${speed + 1}x",
-                      style: TextStyle(fontSize: 20),
+                      style: const TextStyle(fontSize: 20),
                     ))),
           ],
         ),
@@ -785,37 +784,37 @@ class BarPainter extends CustomPainter {
   final int value;
   final int index;
 
-  BarPainter({this.width, this.value, this.index});
+  BarPainter({required this.width, required this.value, required this.index});
 
   @override
   void paint(Canvas canvas, Size size) {
     Paint paint = Paint();
-    if (this.value < 500 * .10) {
-      paint.color = Color(0xFFDEEDCF);
-    } else if (this.value < 500 * .20) {
-      paint.color = Color(0xFFBFE1B0);
-    } else if (this.value < 500 * .30) {
-      paint.color = Color(0xFF99D492);
-    } else if (this.value < 500 * .40) {
-      paint.color = Color(0xFF74C67A);
-    } else if (this.value < 500 * .50) {
-      paint.color = Color(0xFF56B870);
-    } else if (this.value < 500 * .60) {
-      paint.color = Color(0xFF39A96B);
-    } else if (this.value < 500 * .70) {
-      paint.color = Color(0xFF1D9A6C);
-    } else if (this.value < 500 * .80) {
-      paint.color = Color(0xFF188977);
-    } else if (this.value < 500 * .90) {
-      paint.color = Color(0xFF137177);
+    if (value < 500 * .10) {
+      paint.color = const Color(0xFFDEEDCF);
+    } else if (value < 500 * .20) {
+      paint.color = const Color(0xFFBFE1B0);
+    } else if (value < 500 * .30) {
+      paint.color = const Color(0xFF99D492);
+    } else if (value < 500 * .40) {
+      paint.color = const Color(0xFF74C67A);
+    } else if (value < 500 * .50) {
+      paint.color = const Color(0xFF56B870);
+    } else if (value < 500 * .60) {
+      paint.color = const Color(0xFF39A96B);
+    } else if (value < 500 * .70) {
+      paint.color = const Color(0xFF1D9A6C);
+    } else if (value < 500 * .80) {
+      paint.color = const Color(0xFF188977);
+    } else if (value < 500 * .90) {
+      paint.color = const Color(0xFF137177);
     } else {
-      paint.color = Color(0xFF0E4D64);
+      paint.color = const Color(0xFF0E4D64);
     }
 
     paint.strokeWidth = width;
     paint.strokeCap = StrokeCap.round;
 
-    canvas.drawLine(Offset(index * this.width, 0), Offset(index * this.width, this.value.ceilToDouble()), paint);
+    canvas.drawLine(Offset(index * width, 0), Offset(index * width, value.ceilToDouble()), paint);
   }
 
   @override
