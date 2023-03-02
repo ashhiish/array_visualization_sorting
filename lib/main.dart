@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
@@ -734,19 +735,41 @@ class MyHomePageState extends State<MyHomePage> {
               initialData: _numbers,
               stream: _streamController.stream,
               builder: (context, snapshot) {
-                List<int> numbers = snapshot.data!;
-                int counter = 0;
-                return Row(
-                  children: numbers.map((int num) {
-                    counter++;
-                    return CustomPaint(
+                // int counter = 0;
+
+                /// Optimization 1 : instead of number of widgets, there should be 1 widget only
+                /// so only one CustomPainter instead of multiple
+
+                return Container(
+                    margin: const EdgeInsets.all(2),
+                    padding: const EdgeInsets.all(2),
+                    child: CustomPaint(
+                      willChange: true,
+                      child: Container(
+                        color: Colors.transparent,
+                      ),
                       painter: BarPainter(
-                          index: counter,
-                          value: num,
-                          width: MediaQuery.of(context).size.width / _sampleSize),
-                    );
-                  }).toList(),
-                );
+                        /// No need of index counter, we will use a for loop in painter class
+                        // index: counter,
+                        numbers: snapshot.data!,
+
+                        /// we will not send the width of each bar, instead we will let
+                        /// customPainter deduce the width of each bar using canvas size.width
+                        // eachBarWidth: MediaQuery.of(context).size.width / _sampleSize),
+                      ),
+                    ));
+
+                // return Row(
+                //   children: numbers.map((int num) {
+                //     counter++;
+                //     return CustomPaint(
+                //       painter: BarPainter(
+                //           index: counter,
+                //           value: num,
+                //           width: MediaQuery.of(context).size.width / _sampleSize),
+                //     );
+                //   }).toList(),
+                // );
               }),
         ),
       ),
@@ -780,45 +803,113 @@ class MyHomePageState extends State<MyHomePage> {
 }
 
 class BarPainter extends CustomPainter {
-  final double width;
-  final int value;
-  final int index;
+  // final double width;
+  final List<int> numbers;
+  // final int index;
 
-  BarPainter({required this.width, required this.value, required this.index});
+  BarPainter({
+    // required this.eachBarWidth,
+    required this.numbers,
+    // required this.index
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
-    Paint paint = Paint();
-    if (value < 500 * .10) {
-      paint.color = const Color(0xFFDEEDCF);
-    } else if (value < 500 * .20) {
-      paint.color = const Color(0xFFBFE1B0);
-    } else if (value < 500 * .30) {
-      paint.color = const Color(0xFF99D492);
-    } else if (value < 500 * .40) {
-      paint.color = const Color(0xFF74C67A);
-    } else if (value < 500 * .50) {
-      paint.color = const Color(0xFF56B870);
-    } else if (value < 500 * .60) {
-      paint.color = const Color(0xFF39A96B);
-    } else if (value < 500 * .70) {
-      paint.color = const Color(0xFF1D9A6C);
-    } else if (value < 500 * .80) {
-      paint.color = const Color(0xFF188977);
-    } else if (value < 500 * .90) {
-      paint.color = const Color(0xFF137177);
-    } else {
-      paint.color = const Color(0xFF0E4D64);
+    final double canvasWidth = size.width;
+
+    final double eachBarWidth = canvasWidth / numbers.length;
+
+    Paint paint = Paint()..strokeCap = StrokeCap.round;
+
+    for (int i = 0; i < numbers.length; i++) {
+      if (numbers[i] < 500 * .10) {
+        paint.color = const Color(0xFFDEEDCF);
+      } else if (numbers[i] < 500 * .20) {
+        paint.color = const Color(0xFFBFE1B0);
+      } else if (numbers[i] < 500 * .30) {
+        paint.color = const Color(0xFF99D492);
+      } else if (numbers[i] < 500 * .40) {
+        paint.color = const Color(0xFF74C67A);
+      } else if (numbers[i] < 500 * .50) {
+        paint.color = const Color(0xFF56B870);
+      } else if (numbers[i] < 500 * .60) {
+        paint.color = const Color(0xFF39A96B);
+      } else if (numbers[i] < 500 * .70) {
+        paint.color = const Color(0xFF1D9A6C);
+      } else if (numbers[i] < 500 * .80) {
+        paint.color = const Color(0xFF188977);
+      } else if (numbers[i] < 500 * .90) {
+        paint.color = const Color(0xFF137177);
+      } else {
+        paint.color = const Color(0xFF0E4D64);
+      }
+
+      // Method 1
+      Vertices vertices = Vertices(
+        VertexMode.triangles,
+        [
+          /// imagine a box
+          /// p4--------p3
+          /// |         |
+          /// |         |
+          /// |         |
+          /// |         |
+          /// p1--------p2
+
+          /// p1 = starting offset
+          /// x = each bar width * how away from the center (i)
+          // Offset(i * eachBarWidth, 0),
+          Offset(Multiplication().multiply(i.ceilToDouble(), eachBarWidth), 0),
+
+          /// p2 = point 2, height remains same but width increases
+          /// x = starting point offset + each Bar Width
+          ///
+          /// here decreasing the each bar width by dividing it so there can be some whitespace between bars
+          ///
+          // Offset((i * eachBarWidth) + (eachBarWidth / 1.2), 0),
+          Offset(
+              Multiplication().multiply(i.ceilToDouble(), eachBarWidth) + (eachBarWidth / 1.2), 0),
+
+          /// p3 = point 3, width and height both changes
+          /// width = height remains same but width increases
+          // Offset((i * eachBarWidth) + (eachBarWidth / 1.2), numbers[i].ceilToDouble()),
+          Offset(Multiplication().multiply(i.ceilToDouble(), eachBarWidth) + (eachBarWidth / 1.2),
+              numbers[i].ceilToDouble()),
+
+          /// p4 = ending offset
+          // Offset(i * eachBarWidth, numbers[i].ceilToDouble()),
+          Offset(
+              Multiplication().multiply(i.ceilToDouble(), eachBarWidth), numbers[i].ceilToDouble()),
+        ],
+        indices: [0, 1, 2, 0, 2, 3],
+      );
+
+      canvas.drawVertices(vertices, BlendMode.color, paint);
     }
 
-    paint.strokeWidth = width;
-    paint.strokeCap = StrokeCap.round;
-
-    canvas.drawLine(Offset(index * width, 0), Offset(index * width, value.ceilToDouble()), paint);
+    /// Optimization 2 : we will use drawVertices instead of drawing lines
+    // paint.strokeWidth = width;
+    // canvas.drawLine(Offset(index * width, 0), Offset(index * width, value.ceilToDouble()), paint);
   }
 
   @override
   bool shouldRepaint(CustomPainter oldDelegate) {
     return true;
+  }
+}
+
+class Multiplication {
+  Map<double, double> cachedSolutions = {};
+
+  // Memozation
+  double multiply(double a, double b) {
+    if (cachedSolutions.containsKey(a + b)) {
+      print("contains");
+      return cachedSolutions[a + b]!;
+    } else {
+      print("does not contain");
+      cachedSolutions[a + b] = a * b;
+      return cachedSolutions[a + b]!;
+    }
   }
 }
